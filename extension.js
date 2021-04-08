@@ -152,45 +152,23 @@ var RemminaSearchProvider = class RemminaSearchProvider_SearchProvider {
                                       });
     }
 
-    createResultObject(metaInfo, terms) {
+    /* createResultObject(metaInfo, terms) {
         metaInfo.createIcon = (size) => {
             let box = new Clutter.Box();
-            let icon;
 
-            if (remminaApp) {
-                icon = remminaApp.create_icon_texture(size);
-            }
-
-            if (!icon || !icon.gicon)
-            {
-                // try different icon names
-                let theme = Gtk.IconTheme.get_default();
-                let gicon = null;
-                for (let i = 0; !gicon && i < ids.length; i++) {
-                    let name = ids[i];
-                    if (theme.has_icon(name)) {
-                        gicon = new Gio.ThemedIcon({name: name});
-                    }
-                }
-                if (!gicon)
-                    log("Failed to find icon for remmina");
-                // handle display scaling
-                let scale_factor = St.ThemeContext.get_for_stage(global.stage).scale_factor;
-                icon = new St.Icon({ gicon: gicon,
-                                     icon_size: size / scale_factor });
-            }
-            box.add_child(icon);
+            box.add_child(St.Icon({ gicon: "org.remmina.Remmina",
+                                icon_size: size}));
             if (metaInfo.protocol in emblems) {
                 // remmina emblems are fixed size of 22 pixels
                 let size = 22;
-                let emblem = new St.Icon({ gicon: new Gio.ThemedIcon({name: emblems[metaInfo.protocol]}),
+                let emblem = new St.Icon({ gicon: remminaApp.get_icon(),
                                            icon_size: size});
                 box.add_child(emblem);
             }
             return box;
         };
         return new Search.GridSearchResult(provider, metaInfo, getMainOverviewViewSelector()._searchResults);
-    }
+    } */
 
     filterResults(results, max) {
         return results.slice(0, max);
@@ -200,6 +178,11 @@ var RemminaSearchProvider = class RemminaSearchProvider_SearchProvider {
         return str.replace(
             new RegExp(`(?![^\\n]{1,${maxWidth}}$)([^\\n]{1,${maxWidth}})\\s`, 'g'),
             '$1\n');
+    }
+
+    _createIcon(size) {
+        return new St.Icon({ gicon: remminaApp.get_icon(),
+                             icon_size: size });
     }
 
     getResultMetas(ids, callback) {
@@ -223,7 +206,9 @@ var RemminaSearchProvider = class RemminaSearchProvider_SearchProvider {
                 metas.push({ id: id,
                              protocol: session.protocol,
                              description: session.server,
-                             name: name });
+                             name: name,
+                             createIcon: this._createIcon.bind(this)
+                             });
             } else {
                 log("failed to find session with id: " + id);
             }
